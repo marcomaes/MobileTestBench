@@ -1,0 +1,461 @@
+package io.github.marcomaes.mobiletestbench.ui
+
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.ui.JBColor
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.JBTextField
+import com.intellij.util.ui.JBUI
+import io.github.marcomaes.mobiletestbench.DeviceServices
+import io.github.marcomaes.mobiletestbench.core.Device
+import io.github.marcomaes.mobiletestbench.core.DeviceKind
+import io.github.marcomaes.mobiletestbench.core.Platform
+import io.github.marcomaes.mobiletestbench.core.apps.Apps
+import io.github.marcomaes.mobiletestbench.core.notifications.AndroidPost
+import io.github.marcomaes.mobiletestbench.core.notifications.ApnsForm
+import io.github.marcomaes.mobiletestbench.core.notifications.ApnsPayload
+import io.github.marcomaes.mobiletestbench.core.notifications.ApnsPayloads
+import io.github.marcomaes.mobiletestbench.core.notifications.HistoryEntry
+import io.github.marcomaes.mobiletestbench.core.notifications.IntentSpec
+import io.github.marcomaes.mobiletestbench.core.notifications.NotificationCommands
+import io.github.marcomaes.mobiletestbench.core.notifications.NotificationResult
+import io.github.marcomaes.mobiletestbench.core.notifications.PayloadHistory
+import io.github.marcomaes.mobiletestbench.core.notifications.PostStyle
+import io.github.marcomaes.mobiletestbench.settings.MobileTestBenchSettings
+import java.awt.BorderLayout
+import java.awt.CardLayout
+import java.awt.Font
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import javax.swing.DefaultComboBoxModel
+import javax.swing.JButton
+import javax.swing.JCheckBox
+import javax.swing.JComboBox
+import javax.swing.JComponent
+import javax.swing.JPanel
+import javax.swing.SwingUtilities
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
+
+/**
+ * Sends test notifications. iOS simulator: an APNs payload (form or raw JSON) through `simctl push`. Android: a notification posted by the
+ * shell package (`cmd notification post`) and an intent broadcast. The last 15 sends are remembered. Pure logic in `core/notifications`.
+ */
+class NotificationsPanel : JPanel(BorderLayout()), DeviceToolTab {
+
+    override val title = "Notifications"
+    override val component: JComponent get() = this
+    override val scrollable: Boolean get() = true
+
+    override fun deviceChanged(device: Device?) {
+        this.device = device
+        gen++
+        appGen++
+        loading = false
+        busy = false
+        installed = emptyList()
+        showCard()
+        fillHistory()
+        setResult(if (device == null) "Not connected" else " ", false)
+        if (device != null && ios(device) && visible) loadApps()
+    }
+
+    override fun shown() {
+        visible = true
+        if (device?.let { ios(it) } == true && installed.isEmpty()) loadApps()
+    }
+
+    override fun hidden() { visible = false }
+    override fun dispose() { gen++; appGen++ }
+
+    private var device: Device? = null
+    private var visible = false
+    private var busy = false
+    private var installed: List<String> = emptyList()
+    private var loading = false
+
+    /** Bumped on a device change and for every send: a late result for another device is dropped. */
+    @Volatile private var gen = 0
+
+    /** Separate counter for the installed-apps load, so a send does not invalidate it. Bumped on a device change and dispose. */
+    @Volatile private var appGen = 0
+
+    private val cards = CardLayout()
+    private val cardPanel = JPanel(cards)
+    private val noDevice = WrappingLabel(" ")
+
+    // iOS
+    private val bundle = JComboBox<String>().apply { isEditable = true }
+    private val bundleNote = WrappingLabel(" ").apply { foreground = JBColor.GRAY }
+    private val rawMode = JCheckBox("Raw JSON")
+    private val fTitle = JBTextField()
+    private val fSubtitle = JBTextField()
+    private val fBody = JBTextField()
+    private val fBadge = JBTextField(6)
+    private val fSound = JComboBox(arrayOf("", "default")).apply { isEditable = true }
+    private val fCategory = JBTextField()
+    private val fCustom = JBTextArea(3, 1)
+    private val raw = JBTextArea(10, 1)
+    private val preview = JBTextArea(10, 1).apply { isEditable = false; font = Font(Font.MONOSPACED, Font.PLAIN, 12) }
+    private val sizeLabel = WrappingLabel(" ")
+    private val problemLabel = WrappingLabel(" ")
+    private val iosSend = JButton("Send")
+    private var current: ApnsPayload = ApnsPayloads.build(ApnsForm())
+
+    // Android
+    private val aTitle = JBTextField()
+    private val aText = JBTextField()
+    private val aStyle = JComboBox(PostStyle.values())
+    private val aTag = JBTextField("mobiletestbench")
+    private val aLines = JBTextArea(3, 1)
+    private val aConversation = JBTextField()
+    private val aMessages = JBTextArea(3, 1)
+    private val styleExtras = JPanel(GridBagLayout())
+    private val post = JButton("Post")
+    private val clear = JButton("Clear shell notifications")
+    private val iAction = JBTextField()
+    private val iPackage = JBTextField()
+    private val iComponent = JBTextField()
+    private val iExtras = JBTextArea(3, 1)
+    private val broadcast = JButton("Broadcast")
+
+    // Filled by iosCard() from init; they must be declared above init, or their initializers would run afterwards and reset them.
+    private var rawRows: List<java.awt.Component> = emptyList()
+    private var formRows: List<java.awt.Component> = emptyList()
+
+    // Common
+    private val result = WrappingLabel(" ")
+    private val history = JComboBox<HistoryEntry?>()
+    private var entries: List<HistoryEntry> = emptyList()
+    private var loadingHistory = false
+
+    init {
+        border = JBUI.Borders.empty(6, 8)
+        cardPanel.add(noDevice, "none")
+        cardPanel.add(iosCard(), "ios")
+        cardPanel.add(androidCard(), "android")
+        add(cardPanel, BorderLayout.CENTER)
+        val bottom = JPanel(GridBagLayout())
+        val c = GridBagConstraints().apply { gridy = 0; anchor = GridBagConstraints.WEST; insets = JBUI.insets(3, 0, 3, 8) }
+        bottom.add(WrappingLabel("History"), c.apply { gridx = 0 })
+        bottom.add(history, c.apply { gridx = 1; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL })
+        bottom.add(result, c.apply { gridx = 0; gridy = 1; gridwidth = 2 })
+        add(bottom, BorderLayout.SOUTH)
+
+        history.renderer = labelRenderer<HistoryEntry?> { it?.label ?: "(choose a remembered send)" }
+        reloadHistory()
+        history.addActionListener {
+            if (loadingHistory) return@addActionListener
+            val e = history.selectedItem as? HistoryEntry ?: return@addActionListener
+            load(e)
+            // Back to the prompt so choosing the same entry again reloads it.
+            loadingHistory = true
+            history.selectedIndex = 0
+            loadingHistory = false
+        }
+
+        val listener = object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent?) = updatePreview()
+            override fun removeUpdate(e: DocumentEvent?) = updatePreview()
+            override fun changedUpdate(e: DocumentEvent?) = updatePreview()
+        }
+        listOf(fTitle, fSubtitle, fBody, fBadge, fCategory).forEach { it.document.addDocumentListener(listener) }
+        (fSound.editor.editorComponent as javax.swing.text.JTextComponent).document.addDocumentListener(listener)
+        fCustom.document.addDocumentListener(listener)
+        raw.document.addDocumentListener(listener)
+        (bundle.editor.editorComponent as javax.swing.text.JTextComponent).document.addDocumentListener(object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent?) = updateBundleNote()
+            override fun removeUpdate(e: DocumentEvent?) = updateBundleNote()
+            override fun changedUpdate(e: DocumentEvent?) = updateBundleNote()
+        })
+        rawMode.addActionListener {
+            if (rawMode.isSelected && raw.text.isBlank()) raw.text = current.pretty
+            showMode()
+            updatePreview()
+        }
+        iosSend.addActionListener { sendIos() }
+        aStyle.addActionListener { showStyleFields() }
+        post.addActionListener { sendPost() }
+        clear.addActionListener { sendClear() }
+        broadcast.addActionListener { sendBroadcast() }
+        showMode()
+        showStyleFields()
+        updatePreview()
+        showCard()
+    }
+
+    private fun iosCard(): JComponent {
+        val p = JPanel(GridBagLayout())
+        var row = 0
+        fun line(label: String, field: JComponent): List<java.awt.Component> {
+            val l = WrappingLabel(label)
+            val c = GridBagConstraints().apply { gridy = row++; anchor = GridBagConstraints.NORTHWEST; insets = JBUI.insets(2, 0, 2, 8) }
+            p.add(l, c.apply { gridx = 0 })
+            p.add(field, c.apply { gridx = 1; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL })
+            return listOf(l, field)
+        }
+        line("App (bundle id)", bundle)
+        line("", bundleNote)
+        line("Mode", rawMode)
+        formRows = line("Title", fTitle) + line("Subtitle", fSubtitle) + line("Body", fBody) + line("Badge", fBadge) + line("Sound", fSound) +
+            line("Category", fCategory) + line("Custom data (JSON object)", JBScrollPane(fCustom))
+        rawRows = line("Raw JSON", JBScrollPane(raw))
+        line("Payload sent", JBScrollPane(preview))
+        line("", sizeLabel)
+        line("", problemLabel)
+        line("", iosSend)
+        line("", WrappingLabel("<html>The simulator accepts any bundle id. A banner only appears if the app has asked for and been granted notification permission " +
+            "(check Settings > Notifications in the simulator); simctl cannot grant it. \"Notification sent\" only means the simulator accepted the payload.</html>")
+            .apply { foreground = JBColor.GRAY })
+        return p
+    }
+
+    private fun androidCard(): JComponent {
+        val p = JPanel(GridBagLayout())
+        var row = 0
+        fun line(label: String, field: JComponent) {
+            val c = GridBagConstraints().apply { gridy = row++; anchor = GridBagConstraints.NORTHWEST; insets = JBUI.insets(2, 0, 2, 8) }
+            p.add(WrappingLabel(label), c.apply { gridx = 0 })
+            p.add(field, c.apply { gridx = 1; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL })
+        }
+        line("", WrappingLabel("<html><b>Post a notification</b><br>It is posted by the Android shell package (com.android.shell), not by your app, so it cannot test your app's own " +
+            "notification handling, channels or tap actions. For FCM, trigger your app's own debug receiver with the Send intent group below, or use your backend or the Firebase console.</html>")
+            .apply { foreground = JBColor.GRAY })
+        line("Title", aTitle)
+        line("Text", aText)
+        line("Style", aStyle)
+        styleExtras.also {
+            val c = GridBagConstraints().apply { gridx = 0; gridy = 0; weightx = 0.0; anchor = GridBagConstraints.NORTHWEST; insets = JBUI.insets(2, 0, 2, 8) }
+            it.add(WrappingLabel("Inbox lines (one per line)").also { l -> inboxLabel = l }, c)
+            it.add(JBScrollPane(aLines).also { s -> inboxScroll = s }, c.apply { gridx = 1; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL })
+            it.add(WrappingLabel("Conversation").also { l -> convLabel = l }, c.apply { gridx = 0; gridy = 1; weightx = 0.0; fill = GridBagConstraints.NONE })
+            it.add(aConversation, c.apply { gridx = 1; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL })
+            it.add(WrappingLabel("Messages (who:text per line)").also { l -> msgLabel = l }, c.apply { gridx = 0; gridy = 2; weightx = 0.0; fill = GridBagConstraints.NONE })
+            it.add(JBScrollPane(aMessages).also { s -> msgScroll = s }, c.apply { gridx = 1; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL })
+        }
+        line("", styleExtras)
+        line("Tag", aTag)
+        val buttons = JPanel(java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 6, 0)).apply { add(post); add(clear) }
+        line("", buttons)
+        line("", WrappingLabel("Posting again with the same tag replaces the notification. Newlines are not supported in these fields.").apply { foreground = JBColor.GRAY })
+        line("", WrappingLabel("<html><b>Send intent</b> (am broadcast)</html>"))
+        line("Action", iAction)
+        line("Package", iPackage)
+        line("Component", iComponent)
+        line("Extras (key=value per line)", JBScrollPane(iExtras))
+        line("", broadcast)
+        line("", WrappingLabel("<html>Extras are strings unless prefixed: i:count=5, z:flag=true, l:big=1, f:x=1.5. A component (package/.Class) wins over the package. " +
+            "The result \"completed: result=0\" does NOT prove that a receiver exists or handled the intent.</html>").apply { foreground = JBColor.GRAY })
+        return p
+    }
+
+    private lateinit var inboxLabel: JComponent
+    private lateinit var inboxScroll: JComponent
+    private lateinit var convLabel: JComponent
+    private lateinit var msgLabel: JComponent
+    private lateinit var msgScroll: JComponent
+
+    private fun <T> labelRenderer(text: (T?) -> String): javax.swing.ListCellRenderer<T> {
+        val base = javax.swing.DefaultListCellRenderer()
+        return javax.swing.ListCellRenderer { list, value, index, sel, focus -> base.getListCellRendererComponent(list, text(value), index, sel, focus) }
+    }
+
+    private fun ios(d: Device) = d.platform == Platform.IOS && d.kind == DeviceKind.SIMULATOR
+
+    private fun showCard() {
+        val d = device
+        when {
+            d == null -> { noDevice.text = "Not connected"; cards.show(cardPanel, "none") }
+            d.platform == Platform.ANDROID -> cards.show(cardPanel, "android")
+            ios(d) -> cards.show(cardPanel, "ios")
+            else -> { noDevice.text = "Notifications can only be sent to Android devices and iOS simulators (simctl push does not support physical iPhones)."; cards.show(cardPanel, "none") }
+        }
+        updateEnabled()
+    }
+
+    private fun showMode() {
+        val isRaw = rawMode.isSelected
+        formRows.forEach { it.isVisible = !isRaw }
+        rawRows.forEach { it.isVisible = isRaw }
+        // The labels of the hidden rows sit in front of their fields in the component list.
+        revalidate()
+    }
+
+    private fun showStyleFields() {
+        val s = aStyle.selectedItem as PostStyle
+        listOf(inboxLabel, inboxScroll).forEach { it.isVisible = s == PostStyle.INBOX }
+        listOf(convLabel, aConversation, msgLabel, msgScroll).forEach { it.isVisible = s == PostStyle.MESSAGING }
+        revalidate()
+    }
+
+    private fun form() = ApnsForm(fTitle.text, fSubtitle.text, fBody.text, fBadge.text, (fSound.editor.item as? String).orEmpty(), fCategory.text, fCustom.text)
+
+    private fun updatePreview() {
+        current = if (rawMode.isSelected) ApnsPayloads.inspect(raw.text) else ApnsPayloads.build(form())
+        preview.text = current.pretty
+        preview.caretPosition = 0
+        sizeLabel.text = "${current.size} / ${ApnsPayloads.LIMIT} bytes" + if (current.oversize) " - too large, the simulator refuses it" else ""
+        sizeLabel.foreground = if (current.oversize) JBColor.RED else JBColor.GRAY
+        problemLabel.text = current.problem ?: " "
+        problemLabel.foreground = JBColor.RED
+        updateEnabled()
+    }
+
+    private fun bundleId() = ((bundle.editor.item as? String) ?: "").trim()
+
+    private fun updateBundleNote() {
+        val id = bundleId()
+        val (text, warn) = when {
+            id.isEmpty() -> "Enter a bundle id" to false
+            !NotificationCommands.validBundleId(id) -> "Not a valid bundle id" to true
+            installed.isNotEmpty() && id !in installed -> "Not in the installed apps: simctl would still say sent" to true
+            else -> " " to false
+        }
+        bundleNote.text = text
+        bundleNote.foreground = if (warn) JBColor.RED else JBColor.GRAY
+        updateEnabled()
+    }
+
+    private fun updateEnabled() {
+        val d = device
+        iosSend.isEnabled = d != null && ios(d) && !busy && current.sendable && NotificationCommands.validBundleId(bundleId())
+        val a = d?.platform == Platform.ANDROID && !busy
+        post.isEnabled = a
+        clear.isEnabled = a
+        broadcast.isEnabled = a
+    }
+
+    private fun setResult(text: String, error: Boolean) {
+        result.text = text.ifBlank { " " }.lines().first().take(300)
+        result.toolTipText = text.takeIf { it.lines().size > 1 || it.length > 80 }?.let { "<html>" + it.replace("&", "&amp;").replace("<", "&lt;").replace("\n", "<br>") + "</html>" }
+        result.foreground = if (error) JBColor.RED else JBColor.foreground()
+    }
+
+    private fun loadApps() {
+        val dev = device ?: return
+        if (loading) return
+        loading = true
+        val my = appGen
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val apps = runCatching { Apps.parseList(DeviceServices.mobilecliData(dev, "apps", "list")).map { it.id }.sorted() }.getOrDefault(emptyList())
+            val fg = runCatching { Apps.parseForeground(DeviceServices.mobilecliData(dev, "apps", "foreground"))?.id }.getOrNull()
+            SwingUtilities.invokeLater {
+                if (my != appGen) return@invokeLater
+                loading = false
+                installed = apps
+                val keep = bundleId()
+                bundle.model = DefaultComboBoxModel(apps.toTypedArray())
+                bundle.selectedItem = keep.ifEmpty { fg ?: apps.firstOrNull() ?: "" }
+                updateBundleNote()
+            }
+        }
+    }
+
+    /** Runs [work] on a pooled thread; the result is shown and remembered only when it is for the current device. */
+    private fun run(entry: HistoryEntry?, work: () -> NotificationResult) {
+        if (busy) return
+        val my = ++gen
+        busy = true
+        updateEnabled()
+        setResult("Sending...", false)
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val r = work()
+            SwingUtilities.invokeLater {
+                if (my != gen) return@invokeLater
+                busy = false
+                setResult(r.text, r.error)
+                if (entry != null && !r.error) remember(entry)
+                updateEnabled()
+            }
+        }
+    }
+
+    private fun sendIos() {
+        val dev = device ?: return
+        val id = bundleId()
+        val payload = current
+        if (!payload.sendable) return
+        run(HistoryEntry("ios", mapOf("bundle" to id, "payload" to payload.compact))) {
+            val b = DeviceServices.iosNotifications(dev)
+            b?.push(id, payload.compact) ?: NotificationResult("Not supported for this device", true)
+        }
+    }
+
+    private fun post(): AndroidPost = AndroidPost(
+        aTitle.text, aText.text, aStyle.selectedItem as PostStyle, aTag.text,
+        aLines.text.lines(), aConversation.text, aMessages.text.lines().filter { it.isNotBlank() },
+    )
+
+    private fun sendPost() {
+        val dev = device ?: return
+        val p = post()
+        NotificationCommands.postProblem(p)?.let { setResult(it, true); return }
+        run(HistoryEntry("post", mapOf("title" to p.title, "text" to p.text, "style" to p.style.name, "tag" to p.tag,
+            "lines" to aLines.text, "conversation" to p.conversation, "messages" to aMessages.text))) {
+            DeviceServices.androidNotifications(dev)?.post(p) ?: NotificationResult("Not supported for this device", true)
+        }
+    }
+
+    private fun sendClear() {
+        val dev = device ?: return
+        run(null) { DeviceServices.androidNotifications(dev)?.clearShell() ?: NotificationResult("Not supported for this device", true) }
+    }
+
+    private fun intent() = IntentSpec(iAction.text, iPackage.text, iComponent.text, iExtras.text)
+
+    private fun sendBroadcast() {
+        val dev = device ?: return
+        val i = intent()
+        NotificationCommands.broadcastProblem(i)?.let { setResult(it, true); return }
+        run(HistoryEntry("intent", mapOf("action" to i.action, "package" to i.pkg, "component" to i.component, "extras" to i.extras))) {
+            DeviceServices.androidNotifications(dev)?.broadcast(i) ?: NotificationResult("Not supported for this device", true)
+        }
+    }
+
+    private fun remember(entry: HistoryEntry) {
+        entries = PayloadHistory.add(entries, entry)
+        MobileTestBenchSettings.getInstance().state.notificationHistory = PayloadHistory.save(entries).toMutableList()
+        fillHistory()
+    }
+
+    private fun reloadHistory() {
+        entries = PayloadHistory.load(MobileTestBenchSettings.getInstance().state.notificationHistory)
+        fillHistory()
+    }
+
+    private fun fillHistory() {
+        loadingHistory = true
+        // Only entries for the current platform; with no usable device all of them.
+        val d = device
+        val shown = when {
+            d == null -> entries
+            d.platform == Platform.ANDROID -> entries.filter { it.kind != "ios" }
+            ios(d) -> entries.filter { it.kind == "ios" }
+            else -> entries
+        }
+        history.model = DefaultComboBoxModel<HistoryEntry?>((listOf<HistoryEntry?>(null) + shown).toTypedArray())
+        history.selectedIndex = 0
+        loadingHistory = false
+    }
+
+    /** Fills the form of the matching platform from a remembered send. */
+    private fun load(e: HistoryEntry) {
+        val f = e.fields
+        when (e.kind) {
+            "ios" -> {
+                bundle.selectedItem = f["bundle"].orEmpty()
+                rawMode.isSelected = true
+                raw.text = ApnsPayloads.inspect(f["payload"].orEmpty()).pretty
+                showMode()
+                updatePreview()
+            }
+            "post" -> {
+                aTitle.text = f["title"].orEmpty(); aText.text = f["text"].orEmpty(); aTag.text = f["tag"].orEmpty()
+                aStyle.selectedItem = PostStyle.values().firstOrNull { it.name == f["style"] } ?: PostStyle.PLAIN
+                aLines.text = f["lines"].orEmpty(); aConversation.text = f["conversation"].orEmpty(); aMessages.text = f["messages"].orEmpty()
+            }
+            else -> { iAction.text = f["action"].orEmpty(); iPackage.text = f["package"].orEmpty(); iComponent.text = f["component"].orEmpty(); iExtras.text = f["extras"].orEmpty() }
+        }
+    }
+}

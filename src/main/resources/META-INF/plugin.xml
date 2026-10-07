@@ -1,0 +1,51 @@
+<idea-plugin>
+    <id>io.github.marcomaes.mobiletestbench</id>
+    <name>Mobile Test Bench</name>
+    <vendor url="https://github.com/marcomaes">Marco Maes</vendor>
+    <description><![CDATA[
+        <p>Mirror and control Android and iOS devices in an IDE tool window, and inspect their UI with locators for Mobilewright and Appium.</p>
+        <h3>Features</h3>
+        <ul>
+            <li>Mirror and control: Android emulator (live stream and input through the emulator gRPC API), Android devices (adb), iOS simulators (mobilecli, WebDriverAgent fallback)</li>
+            <li>Inspector: element tree, properties, highlight on screen, Mobilewright and Appium locator suggestions with duplicate detection</li>
+            <li>Recorder and player: record taps, swipes and text into a script, add assertions, replay it</li>
+            <li>Device Tools tabs: logs, performance, files, crashes and more</li>
+            <li>Show Locator on Device: highlight the elements a locator in your test code matches (editor menu, Tools menu, Ctrl+Alt+Shift+M)</li>
+            <li>Device power actions, automatic reconnect and a settings page</li>
+        </ul>
+        <h3>Requirements</h3>
+        <ul>
+            <li>IntelliJ-based IDE 2025.3 or newer</li>
+            <li>mobilecli on the PATH (used for device discovery, hierarchy dumps and iOS)</li>
+            <li>adb from the Android SDK for Android devices and emulators</li>
+            <li>macOS with Xcode (simctl) for iOS simulators</li>
+        </ul>
+        <p>Not tried on a physical iPhone or Android phone.</p>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Mobile Devices"
+                    anchor="right"
+                    icon="/icons/toolWindowDevice.svg"
+                    factoryClass="io.github.marcomaes.mobiletestbench.ui.DeviceToolWindowFactory"/>
+        <projectService serviceImplementation="io.github.marcomaes.mobiletestbench.ui.LocatorTargets"/>
+        <notificationGroup id="Mobile Test Bench" displayType="BALLOON"/>
+        <applicationConfigurable parentId="tools"
+                                 id="io.github.marcomaes.mobiletestbench.settings"
+                                 displayName="Mobile Test Bench"
+                                 instance="io.github.marcomaes.mobiletestbench.settings.MobileTestBenchConfigurable"/>
+    </extensions>
+
+    <actions>
+        <action id="MobileTestBench.ShowLocatorOnDevice"
+                class="io.github.marcomaes.mobiletestbench.ui.ShowLocatorAction"
+                text="Show Locator on Device"
+                description="Highlight the elements the locator under the caret (or the selection) matches on the connected device">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift M"/>
+        </action>
+    </actions>
+</idea-plugin>
