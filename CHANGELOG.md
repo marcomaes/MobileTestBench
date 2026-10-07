@@ -1,6 +1,17 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
+
+- Mirror and control Android emulators, Android phones, iOS simulators and iPhones in the Mobile Devices tool window. An iPhone needs a one-time agent install with a development provisioning profile.
+- Android phones stream through mobilecli (adb screenshots as the fallback), and a foldable switches to the active display when it is folded or unfolded.
+- Inspector with element tree, highlight, duplicate detection and locators for Mobilewright, Appium and WebdriverIO, plus scoped locators and an accessibility audit.
+- Recorder and player for interaction scripts, with assertions, replay controls and Appium or WebdriverIO output.
+- Device Tools tabs: Log, Apps, Open URL, Crashes, Location, Display, Input, Network, Battery, Biometrics, WebView, Files, Performance, Visual and Notifications.
+- Show Locator on Device editor action (Ctrl+Alt+Shift+M).
+- Device power actions, automatic reconnect, and the last device is remembered per project.
+- Clear messages when adb or mobilecli is missing. mobilecli is required for the element inspector on Android 17.
+
+## Changes during development of 1.0.0
 
 - Android screenshots on devices with several displays (foldables): skip the adb "Multiple displays" warning before the PNG, so the mirror shows frames.
 - Android phones (and emulators without gRPC) now mirror through the mobilecli MJPEG stream when mobilecli is installed, falling back to adb screenshots.

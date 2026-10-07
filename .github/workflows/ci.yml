@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Caches the Gradle home, including the downloaded IntelliJ Platform.
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Unit tests plus the platform tests (tool window smoke test), then the plugin zip.
+      - name: Test and build the plugin
+        run: ./gradlew test buildPlugin --stacktrace
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: build/reports/tests/test
+          retention-days: 7
+
+      - name: Upload the plugin zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: MobileTestBench
+          path: build/distributions/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  # The Plugin Verifier downloads several IDEs (about 3 GB), so it only runs for tags and on request.
+  verify:
+    name: Plugin Verifier
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify the plugin against the recommended IDEs
+        run: ./gradlew verifyPlugin --stacktrace
+
+      - name: Upload verifier reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-verifier
+          path: build/reports/pluginVerifier
+          retention-days: 14

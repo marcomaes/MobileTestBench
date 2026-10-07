@@ -114,7 +114,7 @@ Feature ideas for Mobile Test Bench, written from the point of view of someone w
 - [ ] Gestures: iOS double tap and hold-drag through mobilecli (no CLI command; needs its JSON-RPC server or WDA), Android double tap without emulator gRPC, and optionally delaying the first tap of a double click.
 - [x] Hardware buttons panel in the Input tab (volume, power/lock, home, back, app switch, assistant on Android, shake on iOS simulators).
 - [ ] Hardware buttons, next: Siri on iOS (no tool found), a deterministic unlock, iOS volume read-back, and checking everything on physical devices. Record/replay of the Input tab buttons is not wired (DeviceKey is unchanged).
-- [x] Swipe/scroll helpers: "scroll until element visible", with the generated code. In the Recording tab, select recorded swipes and convert them (see README, Recorder).
+- [x] Swipe/scroll helpers: "scroll until element visible", with the generated code. In the Recording tab, select recorded swipes and convert them (see docs/reference, Recorder).
 - [x] Scroll until visible: direction and swipe limit can be chosen (right-click > Set scroll direction and limit...).
 - [ ] Scroll until visible: support a scroll inside a container instead of the whole screen, and run the generated `isVisible()` loop in Mobilewright to confirm it works.
 - [x] Coordinate overlay and ruler: show tap coordinates, logical vs pixel values (hover line, Grid toggle with crosshair, tap marker, copy menu).
@@ -124,7 +124,7 @@ Feature ideas for Mobile Test Bench, written from the point of view of someone w
 
 ## 6. Hybrid and web content
 
-- [x] WebView inspector: DOM tree and CSS/XPath locators for web views (mobilecli webview commands). New "WebView" tab, see README.
+- [x] WebView inspector: DOM tree and CSS/XPath locators for web views (mobilecli webview commands). New "WebView" tab, see docs/reference.
 - [x] Switch between native and web context and show both trees (the native tree stays in the inspector; the WebView tab names the native element that owns the selected web view by matching bounds).
 - [x] Run JavaScript in a web view from the plugin and show the result.
 - [ ] WebView, next: load more than 2000 elements (lazy subtrees), pick an element by clicking the mirror, iframes and shadow DOM, an Appium-style hybrid context switch (`NATIVE_APP` / `WEBVIEW_*`), apps that are not debug builds (Chrome DevTools sockets), and verifying XPath counts and the highlight on a device (not done yet).
@@ -132,14 +132,14 @@ Feature ideas for Mobile Test Bench, written from the point of view of someone w
 
 ## 7. Files and data
 
-- [x] Device file browser: list, download, upload, delete (mobilecli file transfer, `adb`, simctl app containers). New "Files" tab, see README.
+- [x] Device file browser: list, download, upload, delete (mobilecli file transfer, `adb`, simctl app containers). New "Files" tab, see docs/reference.
 - [x] App data viewer: SharedPreferences, UserDefaults (preview in the Files tab); SQLite is pulled with its WAL files and shown in the file manager (no viewer, not opened in the IDE database tool).
 - [ ] Files, next: physical iPhones (mobilecli bundle-id paths), non debuggable Android apps (no root; only `/sdcard/Android/data/<pkg>`), a SQLite viewer or opening a pulled database in the IDE database tool, multiple selection and drag and drop, progress for large transfers, a recursive download of an Android app folder, Android users and work profiles, and verifying a real iOS UserDefaults plist.
 - [ ] Keychain / keystore reset.
 
 ## 8. Performance and quality
 
-- [x] FPS, CPU and memory graphs for the app under test: new "Performance" tab (Android adb: memory PSS/RSS, CPU, janky frames; iOS simulator: footprint and CPU), see README.
+- [x] FPS, CPU and memory graphs for the app under test: new "Performance" tab (Android adb: memory PSS/RSS, CPU, janky frames; iOS simulator: footprint and CPU), see docs/reference.
 - [x] App start time measurement (cold/warm) with history: Performance tab (Android `am start -W`, iOS simulator log), last 20 kept in the session.
 - [ ] Performance, next: iOS frame rate and jank (needs xctrace/Instruments), Android apps with several processes (sum over all pids), physical devices (recheck the PSS cadence, USER_HZ and gfxinfo there), persisting the start history across IDE restarts, and checking the iOS log timing on other iOS versions and scene based apps.
 - [ ] Frame rate of the mirroring itself: scaled gRPC frames, drop frames when the UI is behind (see `performance-guard`).
@@ -162,7 +162,7 @@ Feature ideas for Mobile Test Bench, written from the point of view of someone w
 ## 10. IDE integration
 
 - [ ] Run configuration: start the device and app before a test run, collect screenshot and logs after.
-- [x] Editor action "Show Locator on Device" (editor context menu, Tools menu, Ctrl+Alt+Shift+M): finds the locator in the selection or on the caret line, evaluates it against a fresh hierarchy of the connected device and highlights the matches (see README, Locators in the editor).
+- [x] Editor action "Show Locator on Device" (editor context menu, Tools menu, Ctrl+Alt+Shift+M): finds the locator in the selection or on the caret line, evaluates it against a fresh hierarchy of the connected device and highlights the matches (see docs/reference, Locators in the editor).
 - [ ] Show on device, next: a real gutter icon or intention on locators in test code, a locator spread over several lines without selecting it, stack-trace navigation (a failed test line jumps to the locator and shows it), and locators held in variables or page object constants (only a literal in the selection/line is read).
 - [ ] Navigate from a failing locator in a stack trace to the matching element in the hierarchy.
 - [ ] Appium server and WebDriverAgent management: start/stop, status, logs, session list.
@@ -180,6 +180,7 @@ Feature ideas for Mobile Test Bench, written from the point of view of someone w
 - [x] Show the transport and why a fallback happened (gRPC unavailable, MJPEG ended, WDA missing) in the status bar tooltip.
 - [ ] Transport tooltip, next: check the wording against live fallbacks (emulator without gRPC, mobilecli stream ending, simulator without WDA).
 - [x] Clean-machine install test (2026-10-07, zip in a fresh IDE with a fake HOME, minimal PATH, no mobilecli): the plugin loads without errors; no mobilecli gives an empty iPhone list, 1 fps Android mirror and an Android 17 inspector error that now names mobilecli; a wrong adb path now says adb was not found. The mobilecli-required messages are covered by `DeviceServicesWithoutMobilecliTest` (generic call, screen recording, physical iPhone session, simulator files, log source, Input clipboard); not run by hand in the IDE.
+- [x] GitHub Actions workflow (`.github/workflows/ci.yml`): `test buildPlugin` on push and pull request, `verifyPlugin` on tags and on request. Checked locally with a from-scratch build (no build cache, 734 tests) and a YAML parse; the workflow itself has not run on GitHub yet.
 - [ ] Integration tests against a real emulator/simulator in CI.
 - [x] Make `gradlew` executable in the repo (`./gradlew` and `sh gradlew` both work).
 - [x] Align `protobufVersion` with grpc 1.84: now 3.25.9, reasons in `gradle.properties`.
@@ -187,4 +188,4 @@ Feature ideas for Mobile Test Bench, written from the point of view of someone w
 - [x] Marketplace readiness: description, change notes (CHANGELOG.md), dark icon, verifyPlugin config, signing/publishing from env vars. Nothing signed or published.
 - [x] LICENSE (Apache 2.0) and NOTICE added and packaged in the plugin zip and jar.
 - [x] Replaced the two deprecated `FileSaverDescriptor(String, String, String...)` calls (LogPanel.save, CrashesPanel.save) with `FileSaverDescriptor(title, description).apply { withExtensionFilter(label, ...) }`, which keeps the extension filter.
-- [x] `./gradlew verifyPlugin` re-run (2026-10-07): Compatible with IU-253, 261, 262 and 263, 14 deprecated usages (generated protobuf code), no errors.
+- [x] `./gradlew verifyPlugin` on the 1.0.0 zip (2026-10-07): Compatible with IU-253, 261, 262 and 263, 14 deprecated usages (generated protobuf code), no errors.

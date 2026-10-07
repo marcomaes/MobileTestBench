@@ -3,24 +3,27 @@
     <name>Mobile Test Bench</name>
     <vendor url="https://github.com/marcomaes">Marco Maes</vendor>
     <description><![CDATA[
-        <p>Mirror and control Android and iOS devices in an IDE tool window, and inspect their UI with locators for Mobilewright and Appium.</p>
+        <p>Mirror and control Android and iOS devices in an IDE tool window, inspect their UI, and get ready-to-use locators for <b>Mobilewright</b>, <b>Appium</b> and <b>WebdriverIO</b>, without leaving your IDE.</p>
         <h3>Features</h3>
         <ul>
-            <li>Mirror and control: Android emulator (live stream and input through the emulator gRPC API), Android devices (adb), iOS simulators (mobilecli, WebDriverAgent fallback)</li>
-            <li>Inspector: element tree, properties, highlight on screen, Mobilewright and Appium locator suggestions with duplicate detection</li>
-            <li>Recorder and player: record taps, swipes and text into a script, add assertions, replay it</li>
-            <li>Device Tools tabs: logs, performance, files, crashes and more</li>
-            <li>Show Locator on Device: highlight the elements a locator in your test code matches (editor menu, Tools menu, Ctrl+Alt+Shift+M)</li>
-            <li>Device power actions, automatic reconnect and a settings page</li>
+            <li><b>Mirror and control</b>: Android emulators, Android phones, iOS simulators and iPhones. Click to tap, drag to swipe, hold for a long press, type with the keyboard.</li>
+            <li><b>Inspector</b>: element tree, properties and a highlight on the screen. Every element gets locator suggestions with duplicate detection, scoped locators and an accessibility audit.</li>
+            <li><b>Recorder and player</b>: record taps, swipes and text into a script, add assertions, replay it, and copy it as Mobilewright, Appium or WebdriverIO code.</li>
+            <li><b>Show Locator on Device</b>: put the caret on a locator in your test code and highlight the elements it matches on the connected device (Ctrl+Alt+Shift+M).</li>
+            <li><b>Device Tools</b>: logs with filters and stack trace navigation, apps and permissions, crashes, location, display and language, network, battery, biometrics, web views, files, performance, visual diff and push notifications.</li>
+            <li><b>Device power and reconnect</b>: boot, shut down or reboot devices, and reconnect automatically when a device drops.</li>
         </ul>
         <h3>Requirements</h3>
         <ul>
-            <li>IntelliJ-based IDE 2025.3 or newer</li>
-            <li>mobilecli on the PATH (used for device discovery, hierarchy dumps and iOS)</li>
-            <li>adb from the Android SDK for Android devices and emulators</li>
-            <li>macOS with Xcode (simctl) for iOS simulators</li>
+            <li>IntelliJ-based IDE 2025.3 or newer.</li>
+            <li><b>mobilecli</b> (<code>npm install -g mobilecli</code>): needed for iOS, for the element inspector on Android 17, and for many Device Tools tabs.</li>
+            <li><b>adb</b> from the Android SDK platform-tools for Android devices and emulators.</li>
+            <li>macOS with Xcode (<code>simctl</code>) for iOS simulators.</li>
+            <li>An iPhone needs a one-time install of the mobilecli agent with a development provisioning profile that includes the device.</li>
         </ul>
-        <p>Not tried on a physical iPhone or Android phone.</p>
+        <h3>Privacy</h3>
+        <p>The plugin has no telemetry and sends no data off your machine. It talks to your devices through adb, xcrun and mobilecli, to the local emulator gRPC port, and to a WebDriverAgent URL you configure.</p>
+        <p>Source code, issues and support: <a href="https://github.com/marcomaes/MobileTestBench">github.com/marcomaes/MobileTestBench</a></p>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
