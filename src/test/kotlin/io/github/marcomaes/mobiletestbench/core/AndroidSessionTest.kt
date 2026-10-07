@@ -150,7 +150,11 @@ class AndroidSessionTest {
         val deadline = System.currentTimeMillis() + 5000
         while (System.currentTimeMillis() < deadline && synchronized(statuses) { statuses.none { it.startsWith("Display changed to 2256x2504") } }) Thread.sleep(20)
         assertTrue(synchronized(statuses) { statuses.any { it.startsWith("Display changed to 2256x2504") } })
-        assertEquals(2, synchronized(runner.commands) { runner.commands.count { it.contains("screencapture") } })
+        // The status is posted just before the new stream's thread starts its process: wait for that command too.
+        fun streams() = synchronized(runner.commands) { runner.commands.count { it.contains("screencapture") } }
+        val started = System.currentTimeMillis() + 5000
+        while (System.currentTimeMillis() < started && streams() < 2) Thread.sleep(20)
+        assertEquals(2, streams())
         session.close()
     }
 }
