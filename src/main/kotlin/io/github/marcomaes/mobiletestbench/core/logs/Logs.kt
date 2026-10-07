@@ -193,7 +193,7 @@ class LogStream private constructor(private val process: Process) : AutoCloseabl
             val process = launch()
             val stream = LogStream(process)
             val errors = StringBuilder()
-            Thread {
+            val errorReader = Thread {
                 runCatching {
                     process.errorStream.bufferedReader().forEachLine { synchronized(errors) { if (errors.length < 2048) errors.append(it).append('\n') } }
                 }
@@ -221,6 +221,8 @@ class LogStream private constructor(private val process: Process) : AutoCloseabl
                 } catch (_: Exception) {
                     // the stream was closed
                 }
+                // stdout can end a moment before stderr has been read: wait for what the process said before reporting the end.
+                runCatching { errorReader.join(1000) }
                 onEnd(synchronized(errors) { errors.toString().trim() }.ifEmpty { null })
             }.apply { isDaemon = true; name = "MobileTestBench-log"; start() }
             return stream

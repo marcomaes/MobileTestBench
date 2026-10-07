@@ -2,6 +2,7 @@ package io.github.marcomaes.mobiletestbench.ui
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.ide.CopyPasteManager
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.ui.ColoredTreeCellRenderer
 import com.intellij.ui.JBColor
 import com.intellij.ui.OnePixelSplitter
@@ -31,9 +32,9 @@ import io.github.marcomaes.mobiletestbench.core.webview.matchText
 import java.awt.BorderLayout
 import java.awt.Font
 import java.awt.FlowLayout
-import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.awt.event.ActionEvent
+import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import javax.swing.AbstractAction
 import javax.swing.DefaultComboBoxModel
@@ -223,7 +224,8 @@ class WebViewPanel(
         cssCopy.addActionListener { copy(cssField.text) }
         xpathCopy.addActionListener { copy(xpathField.text) }
         run.addActionListener { runScript() }
-        val shortcut = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx)
+        // Cmd on macOS, Ctrl elsewhere. Not Toolkit.menuShortcutKeyMaskEx: that throws a HeadlessException without a display.
+        val shortcut = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, if (SystemInfo.isMac) InputEvent.META_DOWN_MASK else InputEvent.CTRL_DOWN_MASK)
         input.inputMap.put(shortcut, "run-js")
         input.actionMap.put("run-js", object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent?) = runScript()
