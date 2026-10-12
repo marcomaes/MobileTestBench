@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- First signed build. No functional changes since 1.0.0.
+
 ## 1.0.0
 
 - Mirror and control Android emulators, Android phones, iOS simulators and iPhones in the Mobile Devices tool window. An iPhone needs a one-time agent install with a development provisioning profile.
