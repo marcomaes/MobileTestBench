@@ -46,9 +46,19 @@ CI does not sign or publish anything: signing and publishing stay a manual step 
 
 Signing and publishing read environment variables only; no value is stored in any file.
 
+Generate the key and certificate chain once, in a folder outside the repository (see the JetBrains [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html) guide). JetBrains Marketplace has no place to register the certificate yet, so there is nothing to upload: it re-signs the plugin with its own certificate. Keep the key and its passphrase in a password manager and never commit them.
+
+```bash
+openssl genpkey -aes-256-cbc -algorithm RSA -out private_encrypted.pem -pkeyopt rsa_keygen_bits:4096
+openssl rsa -in private_encrypted.pem -out private.pem
+openssl req -key private.pem -new -x509 -days 3650 -out chain.crt
+```
+
+The first command asks for the passphrase (`PRIVATE_KEY_PASSWORD`). The second writes an unencrypted copy: delete `private.pem` after the third command and sign with `private_encrypted.pem`.
+
 ```bash
 export CERTIFICATE_CHAIN="$(cat chain.crt)"
-export PRIVATE_KEY="$(cat private.pem)"
+export PRIVATE_KEY="$(cat private_encrypted.pem)"
 export PRIVATE_KEY_PASSWORD='...'
 ./gradlew signPlugin
 export PUBLISH_TOKEN='...'
