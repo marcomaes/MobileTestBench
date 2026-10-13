@@ -76,6 +76,10 @@ The plugin has no telemetry and sends no data off your machine. It runs `adb`, `
 
 Questions, bugs and ideas: [github.com/marcomaes/MobileTestBench/issues](https://github.com/marcomaes/MobileTestBench/issues).
 
+## Thank you
+
+A big thank you to [Gil Megidish](https://www.linkedin.com/in/gilmegidish/), CEO of [Mobile-Next](https://github.com/mobile-next), who created [mobilecli](https://github.com/mobile-next/mobilecli) and [Mobilewright](https://github.com/mobile-next/mobilewright). Mirroring and controlling iPhones and simulators, reading the UI hierarchy on Android 17, and many of the Device Tools tabs run on mobilecli, and the locators follow Mobilewright's Inspector rules. Without his work, this plugin would not be possible.
+
 ## License
 
 Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
