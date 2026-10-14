@@ -8,3 +8,4 @@ out/
 .DS_Store
 .claude/
 CLAUDE.md
+docs/marketplace-*.md
