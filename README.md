@@ -70,7 +70,7 @@ A small, IDE-independent `core` package (unit tested, no IntelliJ or gRPC import
 
 ## Privacy
 
-The plugin has no telemetry and sends no data off your machine. It runs `adb`, `xcrun` and `mobilecli`, connects to the local emulator gRPC port, and calls a WebDriverAgent URL only when you configure one (used without mobilecli). adb, Xcode and mobilecli are separate tools with their own behaviour.
+The plugin has no telemetry and sends no data off your machine. It runs `adb`, `xcrun` and `mobilecli`, connects to the local emulator gRPC port, and calls a WebDriverAgent URL only when you configure one (used without mobilecli). adb, Xcode and mobilecli are separate tools with their own behaviour. See [PRIVACY.md](PRIVACY.md) for details.
 
 ## Support
 
