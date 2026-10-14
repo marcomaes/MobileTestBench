@@ -82,4 +82,4 @@ A big thank you to [Gil Megidish](https://www.linkedin.com/in/gilmegidish/), CEO
 
 ## License
 
-Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Copyright 2026 Marco Maes. Licensed under the Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
