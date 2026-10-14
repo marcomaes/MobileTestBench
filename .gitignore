@@ -6,3 +6,5 @@ out/
 *.iml
 .kotlin/
 .DS_Store
+.claude/
+CLAUDE.md
