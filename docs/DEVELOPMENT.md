@@ -6,7 +6,7 @@ Build, test, release, architecture and known limitations. Back to the [README](.
 
 ### Install from disk
 
-Build the zip with `./gradlew buildPlugin` (result: `build/distributions/MobileTestBench-1.0.0.zip`, about 11.7 MB, with `LICENSE` and `NOTICE` inside). In the IDE open Settings, Plugins, the gear icon, **Install Plugin from Disk...** and pick the zip. You need `mobilecli` on the PATH, `adb` for Android and Xcode for iOS simulators.
+Build the zip with `./gradlew buildPlugin` (result: `build/distributions/MobileTestBench-<version>.zip`, about 12 MB, with `LICENSE` and `NOTICE` inside). In the IDE open Settings, Plugins, the gear icon, **Install Plugin from Disk...** and pick the zip. You need `mobilecli` on the PATH, `adb` for Android and Xcode for iOS simulators.
 
 To let someone else try it, send them the zip together with `TESTING.md` (requirements, install steps, things to try, what is unverified and how to report a problem).
 
@@ -112,4 +112,6 @@ Coordinates: input and hierarchy bounds use a "logical" space per platform (pixe
 ## Ideas for next steps
 
 * Scaled gRPC frames and frame dropping when the UI is slow.
-* Insert the locator in the language of the test (Java, Kotlin, Python, ...) instead of as shown.
+* Several devices side by side (one session per device).
+
+The full list of ideas and open checks is in [TODO.md](../TODO.md).

@@ -1,24 +1,24 @@
 # Testing Mobile Test Bench
 
-Thank you for trying it. This is an early version (0.1.0): it was built against one Android emulator and one iOS simulator, and a lot of the interface has never been used by anyone but its author. Bugs are expected, and a clear bug report is the most useful thing you can send back.
+Thank you for trying it. This is version 1.0.1. It has been checked on a Pixel 9 emulator (Android 17), an iPhone 17 Pro simulator (iOS 26.5), a Samsung Z Fold8 Ultra (Android 17) and an iPhone 13 (iOS 27), but a lot of the interface has only been used by its author. Bugs are expected, and a clear bug report is the most useful thing you can send back.
 
 ## What it is
 
-An IntelliJ-platform plugin that mirrors Android emulators, Android devices and iOS simulators in a tool window, lets you control them with the mouse and keyboard, inspects the screen (element tree, Mobilewright and Appium locators), records and replays interactions, and adds a set of device tools (logs, apps, files, network, location and more).
+An IntelliJ-platform plugin that mirrors Android emulators and phones, iOS simulators and iPhones in a tool window, lets you control them with the mouse and keyboard, inspects the screen (element tree, Mobilewright and Appium locators), records and replays interactions, and adds a set of device tools (logs, apps, files, network, location and more).
 
 ## What you need
 
 * An IDE of build **253 or newer**: IntelliJ IDEA 2025.3 or later, or another IntelliJ-based IDE on the same platform. Older builds cannot install it.
-* **mobilecli** on the PATH: `npm install -g mobilecli`. Most Device Tools features and all iOS input need it. Check with `mobilecli devices`.
+* **mobilecli** on the PATH: `npm install -g mobilecli`. iOS (simulators and iPhones), the element inspector on Android 17 and many Device Tools tabs need it. Check with `mobilecli devices`.
 * For Android: the Android SDK with `adb`. The plugin looks at the adb path setting, `ANDROID_HOME`, `ANDROID_SDK_ROOT`, `~/Library/Android/sdk` and the PATH.
 * For iOS simulators: a Mac with Xcode and the command-line tools (`xcrun simctl`).
-* A running emulator or booted simulator. A physical device is not supported yet, and was never tried.
+* A running emulator, a booted simulator or a connected phone. An iPhone needs a one-time agent install, see [Device setup](docs/DEVICE-SETUP.md).
 
 ## Install
 
-1. Get `MobileTestBench-0.1.0.zip` from whoever sent it to you. Do not unzip it.
+1. Get `MobileTestBench-<version>.zip` from whoever sent it to you. Do not unzip it.
 2. In the IDE: **Settings | Plugins**, click the gear icon, **Install Plugin from Disk...**, pick the zip.
-3. Accept the restart. The IDE may show a one-time note about third-party plugins; the plugin is not signed yet.
+3. Accept the restart. The IDE may show a one-time note about third-party plugins.
 4. Settings that you may want are under **Settings | Tools | Mobile Test Bench** (adb path, replay timeouts, reconnect).
 
 To remove it again: Settings | Plugins | Installed, Mobile Test Bench, Uninstall.
@@ -52,7 +52,7 @@ Do as many as you like, in any order. If something is unclear or looks broken, t
 * Change the **Output** language (Mobilewright or Appium). Press **Replay**, **Replay from Step** and try **Set timeout...** on a wait.
 * **Generate Page Object...** (class icon) writes a page object for the current screen.
 
-**Device Tools tabs**: Log, Apps, Open URL, Crashes, Location, Display, Input, Network, Biometrics, WebView, Files, Performance, Visual, Notifications. Pick the ones that matter for your work. In the Log tab try the level, the `.*` regular-expression toggle and the App filter (an Android package name or an iOS process name). The **Apps** tab can launch, terminate, clear and uninstall apps, so be careful with data you care about.
+**Device Tools tabs**: Log, Apps, Open URL, Crashes, Location, Display, Input, Network, Battery, Biometrics, WebView, Files, Performance, Visual, Notifications. Pick the ones that matter for your work. In the Log tab try the level, the `.*` regular-expression toggle and the App filter (an Android package name or an iOS process name). The **Apps** tab can launch, terminate, clear and uninstall apps, so be careful with data you care about.
 
 **Also**
 * **Device Power** (boot, shut down, reboot) and the automatic reconnect when a device restarts.
@@ -60,7 +60,7 @@ Do as many as you like, in any order. If something is unclear or looks broken, t
 
 ## What is known to be unverified
 
-* Nothing has been tried on a physical iPhone or Android phone.
+* On physical devices (iPhone 13, Z Fold8 Ultra) only mirroring, tap, swipe, long press, text input and the inspector were checked. The Device Tools tabs were not.
 * Most of the newest screens (the Device Tools tabs and the recorder additions) were checked by unit tests and code review only, not clicked through by hand.
 * The generated Appium and Mobilewright code was checked against documentation, never compiled or run against a real Appium server or Mobilewright.
 * Landscape, the contrast hints and Android clearing of text fields in custom widgets (React Native, Flutter, Compose) are weakly tested.

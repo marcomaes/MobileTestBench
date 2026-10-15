@@ -9,3 +9,5 @@ out/
 .claude/
 CLAUDE.md
 docs/marketplace-*.md
+# Backups left by `sed -i` on macOS
+*-E
