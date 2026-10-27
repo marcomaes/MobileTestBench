@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Setting "Use double quotes in Mobilewright locators" (default off) writes locators and recorded steps as `getByTestId("x")` instead of `getByTestId('x')`.
+- The element tree now also refreshes when the screen changes without input, such as when an animation ends or a screen loads. The status bar clock is ignored.
+- The splitter keeps the inspector and the device screen from being dragged to nothing.
+
 ## 1.0.1
 
 - First signed build. No functional changes since 1.0.0.
