@@ -241,13 +241,13 @@ class DisplayPanel : JPanel(GridBagLayout()), DeviceToolTab {
     private fun updateEnabled() {
         val st = state
         val ok = supported(device) && !busy && st != null
-        appearance.isEnabled = ok && st!!.has(DisplayKey.APPEARANCE)
-        font.isEnabled = ok && st!!.has(DisplayKey.FONT_SIZE)
-        animations.isEnabled = ok && st!!.animationsOff != null
-        touches.isEnabled = ok && st!!.showTouches != null
-        layoutBounds.isEnabled = ok && st!!.layoutBounds != null
-        pointer.isEnabled = ok && st!!.pointerLocation != null
-        dontKeep.isEnabled = ok && st!!.dontKeepActivities != null
+        appearance.isEnabled = ok && st.has(DisplayKey.APPEARANCE)
+        font.isEnabled = ok && st.has(DisplayKey.FONT_SIZE)
+        animations.isEnabled = ok && st.animationsOff != null
+        touches.isEnabled = ok && st.showTouches != null
+        layoutBounds.isEnabled = ok && st.layoutBounds != null
+        pointer.isEnabled = ok && st.pointerLocation != null
+        dontKeep.isEnabled = ok && st.dontKeepActivities != null
         reset.isEnabled = supported(device) && !busy && !localeBusy && (st != null || localeState != null)
         refreshButton.isEnabled = supported(device) && !busy
     }
@@ -255,9 +255,9 @@ class DisplayPanel : JPanel(GridBagLayout()), DeviceToolTab {
     private fun updateLocaleEnabled() {
         val st = localeState
         val ok = supported(device) && !localeBusy && st != null
-        language.isEnabled = ok && st!!.languages != null
+        language.isEnabled = ok && st.languages != null
         applyLanguage.isEnabled = language.isEnabled
-        val canZone = ok && localeBackend?.canSetTimeZone == true && st!!.timeZoneError == null
+        val canZone = ok && localeBackend?.canSetTimeZone == true && st.timeZoneError == null
         timeZone.isEnabled = canZone
         applyTimeZone.isEnabled = canZone
     }

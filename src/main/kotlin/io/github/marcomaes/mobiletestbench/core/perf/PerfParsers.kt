@@ -100,7 +100,7 @@ object AndroidPerfParsers {
             totalRegex.find(line)?.let { total = it.groupValues[1].toLong() }
             jankyRegex.find(line)?.let { janky = it.groupValues[1].toLong() }
         }
-        return if (total != null && janky != null) total!! to janky!! else null
+        return if (total != null && janky != null) total to janky else null
     }
 
     /** `adb shell cmd package resolve-activity --brief <pkg>`: the last line that looks like `pkg/.Activity`. */

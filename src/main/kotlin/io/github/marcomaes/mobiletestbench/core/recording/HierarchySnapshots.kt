@@ -26,6 +26,7 @@ class HierarchySnapshots(
     /** [fresh] is false when the hierarchy was captured before the latest input. */
     class Captured(val root: UiNode, val fresh: Boolean)
 
+    @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN") // wait and notifyAll need java.lang.Object
     private val lock = Object()
     private var epoch = 0
     private var lastInputDoneAt = 0L

@@ -72,7 +72,7 @@ object WebLocators {
         var cur: DomNode? = node
         while (cur != null) {
             val anchor = cur !== node && cur.id != null && unique(listOf(Step(null, cur.id)))
-            if (anchor) { steps.addFirst(Step(null, cur!!.id)); break }
+            if (anchor) { steps.addFirst(Step(null, cur.id)); break }
             val ownClasses = if (cur === node) emptyList() else cur.classes.filter { IDENT.matches(it) }
             steps.addFirst(
                 if (ownClasses.isNotEmpty()) Step(cur.tag, classes = ownClasses)

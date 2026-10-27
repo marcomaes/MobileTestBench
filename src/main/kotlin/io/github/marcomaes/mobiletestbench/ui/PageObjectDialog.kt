@@ -227,7 +227,7 @@ class PageObjectDialog(
         override fun getRowCount() = rows.size
         override fun getColumnCount() = 4
         override fun getColumnName(column: Int) = listOf("", "Name", "Type", "Locator")[column]
-        override fun getColumnClass(column: Int): Class<*> = if (column == 0) java.lang.Boolean::class.java else String::class.java
+        override fun getColumnClass(column: Int): Class<*> = if (column == 0) Boolean::class.javaObjectType else String::class.java
         override fun isCellEditable(row: Int, column: Int) = rows[row].candidate.locator != null && (column == 0 || column == 1)
 
         override fun getValueAt(row: Int, column: Int): Any {

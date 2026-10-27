@@ -201,11 +201,11 @@ class AppsPanel(private val project: Project, private val showLog: (String) -> U
         launch.isEnabled = has
         launchOptions.isEnabled = has
         terminate.isEnabled = has
-        clear.isEnabled = has && Apps.canClearData(dev!!)
+        clear.isEnabled = has && Apps.canClearData(dev)
         clear.toolTipText = if (dev != null && !Apps.canClearData(dev)) "Clearing data is not available on a real iPhone" else "Deletes the app's data and kills it; on Android also revokes its runtime permissions"
-        resetState.isEnabled = has && dev!!.isUsable
+        resetState.isEnabled = has && dev.isUsable
         uninstall.isEnabled = has
-        permissions.isEnabled = has && dev!!.isUsable
+        permissions.isEnabled = has && dev.isUsable
         copyId.isEnabled = has
         showLogButton.isEnabled = has
         install.isEnabled = dev != null

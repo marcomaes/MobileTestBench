@@ -73,7 +73,7 @@ class InputPanel : JPanel(BorderLayout()), DeviceToolTab {
         fun group(name: String, vararg rows: JComponent) = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
             border = BorderFactory.createTitledBorder(name)
-            rows.forEach { (it as? JComponent)?.alignmentX = 0f; add(it) }
+            rows.forEach { it.alignmentX = 0f; add(it) }
         }
         val hardware = group("Hardware buttons", row(*buttons.values.toTypedArray(), wake), hardwareNote.also { it.border = JBUI.Borders.empty(0, 8) })
         val keyboard = group("Keyboard", row(*keys.values.toTypedArray(), hideKeyboard), keyboardNote.also { it.border = JBUI.Borders.empty(0, 8) })
@@ -106,7 +106,7 @@ class InputPanel : JPanel(BorderLayout()), DeviceToolTab {
         val mobilecli = d != null && DeviceServices.mobilecli() != null
         val android = platform == Platform.ANDROID
         HardwareButton.values().forEach { b ->
-            val on = platform != null && b.supports(platform) && (android || mobilecli || b == HardwareButton.SHAKE && d?.kind == io.github.marcomaes.mobiletestbench.core.DeviceKind.SIMULATOR)
+            val on = platform != null && b.supports(platform) && (android || mobilecli || b == HardwareButton.SHAKE && d.kind == io.github.marcomaes.mobiletestbench.core.DeviceKind.SIMULATOR)
             val btn = buttons.getValue(b)
             btn.isEnabled = on
             btn.toolTipText = when {

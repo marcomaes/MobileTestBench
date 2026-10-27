@@ -259,7 +259,7 @@ class NetworkPanel : JPanel(GridBagLayout()), DeviceToolTab {
         val changed = d != null && actions.baseline.originals(d.id) != null
         val throttled = emu != null && !emu.normal
         setStatus(changedNote, when {
-            throttled -> "Conditions changed by Mobile Test Bench or earlier: the emulator is throttled (${emu!!.describe()}). It stays so until you press Reset to normal."
+            throttled -> "Conditions changed by Mobile Test Bench or earlier: the emulator is throttled (${emu.describe()}). It stays so until you press Reset to normal."
             changed -> "Conditions changed by MobileTestBench. They stay on the device until you press Reset to normal."
             else -> " "
         }, throttled || changed)

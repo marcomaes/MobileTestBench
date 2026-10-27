@@ -99,7 +99,7 @@ class InspectorPanel(
     private var auditInput: AuditInput? = null
 
     private class AuditInput(val root: UiNode, val frame: java.awt.image.BufferedImage?, val logical: io.github.marcomaes.mobiletestbench.core.Size?)
-    private lateinit var tabs: JBTabbedPane
+    private val tabs: JBTabbedPane
     private val queryField = JBTextField().apply {
         emptyText.text = "Try a locator: screen.getByTestId('...'), //XPath, id=..., By.id(\"...\"), -android uiautomator=..."
     }
