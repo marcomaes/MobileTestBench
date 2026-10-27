@@ -31,6 +31,9 @@ class MobileTestBenchSettings : SimplePersistentStateComponent<MobileTestBenchSe
         /** What locators of the Locators tab are copied as (a `LocatorLanguage` name). */
         var locatorLanguage by string("AS_SHOWN")
 
+        /** Mobilewright locators and recorded steps use double quotes (`getByTestId("x")`) instead of single quotes. */
+        var useDoubleQuotes by property(false)
+
         /** Copy locators as a whole line (`driver.findElement(...)`) instead of the bare locator. */
         var locatorWholeLine by property(false)
 

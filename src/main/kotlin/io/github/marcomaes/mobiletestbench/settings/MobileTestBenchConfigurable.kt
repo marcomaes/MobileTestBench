@@ -28,6 +28,13 @@ class MobileTestBenchConfigurable : BoundConfigurable("Mobile Test Bench") {
                     .comment("The last device is always pre-selected when it is running. This also connects to it. Off by default.")
             }
         }
+        group("Locators") {
+            row {
+                checkBox("Use double quotes in Mobilewright locators")
+                    .bindSelected({ state.useDoubleQuotes }, { state.useDoubleQuotes = it })
+                    .comment("Locators and recorded steps are written as getByTestId(\"x\") instead of getByTestId('x'). Applies to newly shown locators. Default off.")
+            }
+        }
         group("Gestures") {
             row("Long press time (ms):") {
                 intTextField(Gestures.LONG_PRESS_RANGE)

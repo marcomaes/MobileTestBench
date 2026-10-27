@@ -1,5 +1,6 @@
 package io.github.marcomaes.mobiletestbench.core.inspector
 
+import io.github.marcomaes.mobiletestbench.settings.MobileTestBenchSettings
 import io.github.marcomaes.mobiletestbench.core.Platform
 
 data class LocatorSuggestion(
@@ -112,8 +113,11 @@ object MobilewrightLocators {
         Kind.TEXT -> "screen.getByText(${js(locator.value)})"
     }
 
-    fun js(value: String): String =
-        "'" + value.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n") + "'"
+    /** A string literal in the quote style of the settings (single by default). */
+    fun js(value: String): String {
+        val quote = if (runCatching { MobileTestBenchSettings.getInstance().state.useDoubleQuotes }.getOrDefault(false)) '"' else '\''
+        return quote + value.replace("\\", "\\\\").replace(quote.toString(), "\\" + quote).replace("\n", "\\n") + quote
+    }
 }
 
 object LocatorGenerator {

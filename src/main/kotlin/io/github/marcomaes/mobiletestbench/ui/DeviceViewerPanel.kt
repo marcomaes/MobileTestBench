@@ -90,7 +90,24 @@ import javax.swing.Timer
 
 /** Pause after the last input before the inspector re-reads the hierarchy. */
 private const val AUTO_REFRESH_DELAY_MS = 700
+/** Fingerprint of a sparse pixel grid; the top strip is skipped so the status bar clock does not count as a change. */
+private fun screenSignature(image: BufferedImage): Int {
+    var hash = 1
+    val top = image.height / 20
+    for (row in 0 until SIGNATURE_ROWS) {
+        val y = top + (image.height - 1 - top) * row / (SIGNATURE_ROWS - 1)
+        for (col in 0 until SIGNATURE_COLUMNS) {
+            hash = 31 * hash + image.getRGB((image.width - 1) * col / (SIGNATURE_COLUMNS - 1), y)
+        }
+    }
+    return hash
+}
+private const val SIGNATURE_COLUMNS = 24
+private const val SIGNATURE_ROWS = 48
 private const val RECORDING_TAB = "Recording"
+/** Narrowest the splitter lets the inspector and the device screen get, in unscaled pixels. */
+private const val MIN_INSPECTOR_WIDTH = 200
+private const val MIN_SCREEN_WIDTH = 240
 /** How long a recorded tap waits for a hierarchy taken after the previous action, before using an older one. */
 private const val FRESH_WAIT_MS = 2_000L
 /** Device Power: how often and how long to look for a device that came up or went away, and the pause after a reboot command. */
@@ -193,6 +210,8 @@ class DeviceViewerPanel(private val project: Project) : SimpleToolWindowPanel(tr
     /** Re-reads the hierarchy shortly after the last input, so the tree follows what happens on the device. */
     private val autoRefreshTimer = Timer(AUTO_REFRESH_DELAY_MS) { refreshHierarchy(quiet = true) }.apply { isRepeats = false }
     private val frameCounter = AtomicInteger()
+    /** Cheap fingerprint of the last frame; a different one means the screen changed and the hierarchy is stale. */
+    @Volatile private var lastSignature = 0
     private val fpsTimer = Timer(1000) { updateStatus() }
 
     init {
@@ -204,6 +223,9 @@ class DeviceViewerPanel(private val project: Project) : SimpleToolWindowPanel(tr
         inspector.addTab(RECORDING_TAB, recorderPanel)
         project.getService(LocatorTargets::class.java)?.register(this)
 
+        // The inspector's content would force a wide minimum; the screen has none and can be dragged to nothing.
+        inspector.minimumSize = java.awt.Dimension(JBUI.scale(MIN_INSPECTOR_WIDTH), 0)
+        screen.minimumSize = java.awt.Dimension(JBUI.scale(MIN_SCREEN_WIDTH), 0)
         splitter.firstComponent = screen
         splitter.secondComponent = null
 
@@ -597,6 +619,11 @@ class DeviceViewerPanel(private val project: Project) : SimpleToolWindowPanel(tr
             if (session !== owner) return
             frameCounter.incrementAndGet()
             screen.setFrame(image)
+            val signature = screenSignature(image)
+            if (signature != lastSignature) {
+                lastSignature = signature
+                SwingUtilities.invokeLater { if (inspectEnabled && !recording && !freeze.frozen) autoRefreshTimer.restart() }
+            }
         }
 
         override fun onStatus(message: String) {
