@@ -38,7 +38,8 @@ You can select elements from the screen or the tree, and still use the device.
 **Good to know**
 
 * A plain click selects an element and does not touch the device.
-* The tree refreshes by itself shortly after you send input.
+* The tree refreshes by itself shortly after you send input, and also when the screen changes without input (an animation ends, a screen loads). The plugin compares a sparse pixel grid of each frame, skipping the top strip so the status bar clock does not count as a change.
+* The splitter keeps the inspector at least 200 px wide and the device screen at least 240 px wide, so neither can be dragged to nothing.
 * Errors, such as a failed hierarchy dump, are shown in full in place of the tree.
 
 ## Locators tab and Copy as
@@ -55,6 +56,7 @@ The **Locators** tab lists Mobilewright and Appium locators for the selected ele
 
 **Good to know**
 
+* Mobilewright locators are written with single quotes (`getByTestId('x')`). Tick **Use double quotes in Mobilewright locators** in Settings | Tools | Mobile Test Bench (setting `useDoubleQuotes`, default off) to get `getByTestId("x")`; it applies to locators and recorded steps shown after the change.
 * Mobilewright locators follow the order `getByTestId` > `getByRole` > `getByLabel` > `getByText`. Appium alternatives include `id`, `accessibility id`, `-android uiautomator`, `-ios predicate string`, `-ios class chain` and XPath.
 * When the best locator is a duplicate, a **"... in parent"** variant is suggested first, for example `screen.getByTestId('product-item-2').getByTestId('add-to-cart')`.
 * A row with no form in the chosen language is copied as shown, and the status line says so.
